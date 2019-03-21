@@ -11,39 +11,40 @@ import matplotlib.pyplot as plt
 import numpy as np
 import csv
 
-atoms = MagresAtoms.load_magres('./spectra_processing/1,2-dichlorobenzene/free/12_dichlorobenzene_free.magres') #add path to magres file
-nucleus = 'h'
-save_csv = './spectra_processing/1,2-dichlorobenzene/free/H_shifts.csv'
-
-shifts = []
-shift_labels = []
-
-# Extracts Atoms
-C = atoms.species('C')
-#I = np.linspace(1, 1, len(C))
-
-H = atoms.species('H')
-#I = np.linspace(1, 1, len(H))
+def load_magres(path):
+    atoms = MagresAtoms.load_magres(path)
+    return atoms
 
 # Extracts isotopic magnetic shielding and references shifts
-for atom in H:
-    iso = atom.ms.iso
-    #ref = 172.67 # SJR ref
-    #ref = 173.14 # MC ref
-    ref = 29 #H
-    shift = (ref - iso)
-    shifts.append(shift)
-    shift_labels.append(str(atom))
-
-# Makes a dictionary of shifts and atom labels
-data = dict(zip(shift_labels, shifts))
+def extract_shifts(atom, atoms_data):
+    shifts = ['shift']
+    shift_labels = ['label']
+    if atom == 'C':
+        C = atoms_data.species('C')
+        for atom in C:
+            iso = atom.ms.iso
+            ref = 173.14 # MC ref
+            #ref = 172.67 # SJR ref
+            shift = (ref - iso)
+            shifts.append(shift)
+            shift_labels.append(str(atom))
+            data = dict(zip(shift_labels, shifts))
+        return data
+    elif atom == 'H':
+        H = atoms_data.species('H')
+        for atom in H:
+                iso = atom.ms.iso
+                ref = 29 #H
+                shift = (ref - iso)
+                shifts.append(shift)
+                shift_labels.append(str(atom))
+                data = dict(zip(shift_labels, shifts))
+        return data
+    else:
+        print('Invalid atom type')
 
 # Writing shifts to csv
-with open(save_csv, mode='w') as dca:
-    for key in data.keys():
-        dca.write("%s, %s\n" %(key, data[key]))
-
-# Make plot
-plt.bar(shifts, 1, width=0.3)
-plt.xlim(max(shifts)+10, min(shifts)-10)
-plt.show()
+def write_csv(save_csv, data):
+    with open(save_csv, mode='w') as dca:
+        for key in data.keys():
+            dca.write("%s, %s\n" %(key, data[key]))

@@ -10,20 +10,20 @@ from scipy.constants import pi, hbar
 
 c_shifts_df = pandas.read_csv('../1,2-dichlorobenzene/constrained/C_shifts.csv')
 h_shifts_df = pandas.read_csv('../1,2-dichlorobenzene/constrained/H_shifts.csv')
-contacts_intra_df = pandas.read_csv('../1,2-dichlorobenzene/constrained/clean_contacts_intra.csv')
-inter_contacts_df = pandas.read_csv('../1,2-dichlorobenzene/constrained/clean_contacts_inter.csv')
+intra_df = pandas.read_csv('../1,2-dichlorobenzene/constrained/clean_contacts_intra.csv')
+inter_df = pandas.read_csv('../1,2-dichlorobenzene/constrained/clean_contacts_inter.csv')
 
 def clean(x, string):
     x = x.replace(string, '', 1)
     return x
 
-c_shifts_df.label = c_shifts_df.label.apply(clean, args=('13',))
-c_shifts_df = c_shifts_df.set_index('label')
+def round_sf(x, sf=2):
+    return(round(x, sf-int(floor(log10(abs(x))))))
 
-h_shifts_df.label = h_shifts_df.label.apply(clean, args=('1',))
-h_shifts_df = h_shifts_df.set_index('label')
-
-# x is the label in contact, get shift from shifts df using label
+def clean_labels(df, string):
+    df.label = df.label.apply(clean, args=(string,))
+    df = df.set_index('label')
+    return df
 
 def get_shift(x):
     if 'C' in x:
@@ -39,23 +39,23 @@ def calc_dipolar_coupling(x):
     b = (perm*c_gy*h_gy*hbar)/(4*pi*(x**3))
     return(float(b))
 
-intra_df = contacts_intra_df
+def fill_df(df):
+    df['Atom1_Shift'] = df.Atom1.apply(get_shift)
+    df['Atom2_Shift'] = df.Atom2.apply(get_shift)
+    df['dipolar_coupling'] = df.Length.apply(calc_dipolar_coupling)
+    return df
 
-intra_df['Atom1_Shift'] = intra_df.Atom1.apply(get_shift)
-intra_df['Atom2_Shift'] = intra_df.Atom2.apply(get_shift)
-intra_df['dipolar_coupling'] = intra_df.Length.apply(calc_dipolar_coupling)
+c_shifts_df = clean_labels(c_shifts_df, '13')
+h_shifts_df = clean_labels(h_shifts_df, '1')
+
+intra_df = fill_df(intra_df)
+inter_df = fill_df(inter_df)
 
 x1 = intra_df['Atom2_Shift']
 x1_label = intra_df['Atom2']
 y1 = intra_df['Atom1_Shift']
 y1_label = intra_df['Atom1']
 z1 = intra_df['dipolar_coupling']
-
-inter_df = inter_contacts_df
-
-inter_df['Atom1_Shift'] = inter_df.Atom1.apply(get_shift)
-inter_df['Atom2_Shift'] = inter_df.Atom2.apply(get_shift)
-inter_df['dipolar_coupling'] = inter_df.Length.apply(calc_dipolar_coupling)
 
 x2 = inter_df['Atom2_Shift']
 x2_label = inter_df['Atom2']
@@ -67,9 +67,6 @@ frames = [intra_df, inter_df]
 concat_df = pandas.concat(frames)
 concat_df.to_csv('proc_contacts.csv')
 zs = concat_df['dipolar_coupling']
-
-def round_sf(x, sf=2):
-    return(round(x, sf-int(floor(log10(abs(x))))))
 
 min_, max_ = zs.min(), zs.max()
 mid = (min_+max_)/2
