@@ -1,5 +1,5 @@
 '''
-Script to clean Mercury generated .csv contacts data
+Scripts to clean Mercury generated .csv contacts data
 '''
 import csv
 
@@ -10,6 +10,7 @@ bool = []
 def open_csv(csv_path):
     with open(csv_path, 'r') as sim_file:
         sim_reader = csv.reader(sim_file, delimiter=',')
+        array = []
         for row in sim_reader:
             array.append(row[0:4])
         return array
