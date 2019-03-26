@@ -5,13 +5,7 @@ from matplotlib.ticker import LogFormatter
 from math import log10, floor
 import csv
 import numpy
-import scipy.spatial as spatial
 from scipy.constants import pi, hbar
-
-c_shifts_df = pandas.read_csv('../1,2-dichlorobenzene/constrained/C_shifts.csv')
-h_shifts_df = pandas.read_csv('../1,2-dichlorobenzene/constrained/H_shifts.csv')
-intra_df = pandas.read_csv('../1,2-dichlorobenzene/constrained/clean_contacts_intra.csv')
-inter_df = pandas.read_csv('../1,2-dichlorobenzene/constrained/clean_contacts_inter.csv')
 
 def clean(x, string):
     x = x.replace(string, '', 1)
@@ -25,13 +19,6 @@ def clean_labels(df, string):
     df = df.set_index('label')
     return df
 
-def get_shift(x):
-    if 'C' in x:
-        shift = c_shifts_df.loc[x]
-    elif 'H' in x:
-        shift = h_shifts_df.loc[x]
-    return(float(shift))
-
 def calc_dipolar_coupling(x):
     perm = 4e-7*pi
     c_gy = 10.705e-6
@@ -39,18 +26,7 @@ def calc_dipolar_coupling(x):
     b = (perm*c_gy*h_gy*hbar)/(4*pi*(x**3))
     return(float(b))
 
-def fill_df(df):
-    df['Atom1_Shift'] = df.Atom1.apply(get_shift)
-    df['Atom2_Shift'] = df.Atom2.apply(get_shift)
-    df['dipolar_coupling'] = df.Length.apply(calc_dipolar_coupling)
-    return df
-
-c_shifts_df = clean_labels(c_shifts_df, '13')
-h_shifts_df = clean_labels(h_shifts_df, '1')
-
-intra_df = fill_df(intra_df)
-inter_df = fill_df(inter_df)
-
+"""
 x1 = intra_df['Atom2_Shift']
 x1_label = intra_df['Atom2']
 y1 = intra_df['Atom1_Shift']
@@ -143,4 +119,4 @@ cb.set_label('Dipolar Coupling (Hz)')
 fig.canvas.mpl_connect("motion_notify_event", hover)
 plt.show()
 #fig.savefig('free_guest.png')
-#plt.close(fig)
+#plt.close(fig)"""
